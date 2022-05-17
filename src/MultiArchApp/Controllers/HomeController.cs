@@ -16,7 +16,7 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        var arch = RuntimeInformation.OSDescription.ToString();
+        var arch = $"{RuntimeInformation.OSDescription.ToString()} - {RuntimeInformation.OSArchitecture.ToString()}";
         Console.WriteLine(arch);
         return View(new IndexModel(arch));
     }
