@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using MultiArchApp.Models;
+using System.Runtime.InteropServices;
 
 namespace MultiArchApp.Controllers;
 
@@ -15,7 +16,9 @@ public class HomeController : Controller
 
     public IActionResult Index()
     {
-        return View();
+        var arch = RuntimeInformation.OSDescription.ToString();
+        Console.WriteLine(arch);
+        return View(new IndexModel(arch));
     }
 
     public IActionResult Privacy()
