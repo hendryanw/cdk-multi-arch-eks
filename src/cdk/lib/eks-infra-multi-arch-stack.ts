@@ -39,8 +39,8 @@ export class EksInfraMultiArchStack extends Stack {
     const x86OnDemandNodeGroup = cluster.addNodegroupCapacity('x86-ondemand-node-group', {
       nodegroupName: 'x86-ondemand-node-group',
       instanceTypes: [new ec2.InstanceType('t3.medium')],
-      minSize: 2,
-      desiredSize: 2,
+      minSize: 1,
+      desiredSize: 1,
       maxSize: 5,
       diskSize: 50
     });
@@ -49,10 +49,17 @@ export class EksInfraMultiArchStack extends Stack {
     const armOnDemandNodeGroup = cluster.addNodegroupCapacity('arm-ondemand-node-group', {
       nodegroupName: 'arm-ondemand-node-group',
       instanceTypes: [new ec2.InstanceType('t4g.medium')],
-      minSize: 2,
-      desiredSize: 2,
+      minSize: 1,
+      desiredSize: 1,
       maxSize: 5,
-      diskSize: 50
+      diskSize: 50,
+      taints: [
+        {
+          effect: eks.TaintEffect.NO_SCHEDULE,
+          key: 'graviton',
+          value: 'true'
+        }
+      ]
     });
     armOnDemandNodeGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
 

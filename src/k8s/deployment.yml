@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multi-arch-app
+  labels:
+    app: multi-arch-app
+  namespace: multi-arch-app
+spec:
+  selector:
+    matchLabels:
+      app: multi-arch-app
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 100%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: multi-arch-app
+    spec:
+      containers:
+      - image: 545983628851.dkr.ecr.ap-southeast-1.amazonaws.com/test-multi-arch-app:v0.2
+        imagePullPolicy: Always
+        name: multi-arch-app
+        ports:
+          - containerPort: 5080
+            protocol: TCP
+        readinessProbe:
+          httpGet:
+            port: 5080
+            path: /
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 1000m
+            memory: 1000Mi
+      tolerations:
+      - key: graviton
+        value: 'true'
+        effect: NoSchedule
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - "multi-arch-app"
+            topologyKey: kubernetes.io/hostname
