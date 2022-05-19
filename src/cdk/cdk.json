@@ -28,6 +28,13 @@
     "@aws-cdk/core:target-partitions": [
       "aws",
       "aws-cn"
-    ]
+    ],
+    "app-config/clusterName": "multi-arch-eks-cluster",
+    "app-config/vpcId": "vpc-0ac9149c85f34c8f8",
+    "app-config/ecrRepositoryName": "",
+    "app-config/gitHubRepo": "",
+    "app-config/gitHubRepoBranchName": "",
+    "app-config/gitHubRepoOwner": "",
+    "app-config/gitHubTokenAwsSecretsName": ""
   }
 }
