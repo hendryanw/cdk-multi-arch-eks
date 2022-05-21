@@ -26,7 +26,9 @@ export class MultiArchImagePipelineStack extends Stack {
 
     // CI Pipeline
     const sourceOutput = new codepipeline.Artifact();
-    const buildOutput = new codepipeline.Artifact();
+    const x86BuildOutput = new codepipeline.Artifact();
+    const arm64BuildOutput = new codepipeline.Artifact();
+    const manifestBuildOutput = new codepipeline.Artifact();
     const x86ImageBuildProject = this.constructImageBuildProject(repository, 'x86');
     const arm64ImageBuildProject = this.constructImageBuildProject(repository, 'arm64');
     const manifestBuildProject = this.constructManifestBuildProject(repository);
@@ -54,13 +56,13 @@ export class MultiArchImagePipelineStack extends Stack {
               actionName: 'x86-build',
               input: sourceOutput,
               project: x86ImageBuildProject,
-              outputs: [ buildOutput ]
+              outputs: [ x86BuildOutput ]
             }),
             new codepipeline_actions.CodeBuildAction({
               actionName: 'arm64-build',
               input: sourceOutput,
               project: arm64ImageBuildProject,
-              outputs: [ buildOutput ]
+              outputs: [ arm64BuildOutput ]
             })
           ]
         },
@@ -68,10 +70,10 @@ export class MultiArchImagePipelineStack extends Stack {
           stageName: 'ManifestBuild',
           actions: [
             new codepipeline_actions.CodeBuildAction({
-              actionName: 'CodeBuild',
+              actionName: 'manifest-build',
               input: sourceOutput,
               project: manifestBuildProject,
-              outputs: [ buildOutput ]
+              outputs: [ manifestBuildOutput ]
             })
           ]
         }
@@ -83,14 +85,14 @@ export class MultiArchImagePipelineStack extends Stack {
   constructImageBuildProject(repository: ecr.Repository, arch: string): codebuild.PipelineProject {
     var buildImage;
     if (arch == 'x86') {
-      buildImage = codebuild.LinuxBuildImage.AMAZON_LINUX_2;
+      buildImage = codebuild.LinuxBuildImage.AMAZON_LINUX_2_3;
     } else if (arch == 'arm64') {
       buildImage = codebuild.LinuxArmBuildImage.AMAZON_LINUX_2_STANDARD_2_0;
     } else {
       throw 'Invalid arch';
     }
     
-    const buildProject = new codebuild.PipelineProject(this, `${arch}-build`, {
+    var buildProject = new codebuild.PipelineProject(this, `${arch}-build`, {
       environment: {
         privileged: true,
         buildImage: buildImage
@@ -130,7 +132,7 @@ export class MultiArchImagePipelineStack extends Stack {
         },
         artifacts: {
           files: [
-              'src/MultiArchApp/*'
+            'src/MultiArchApp/*'
           ]
         }
       })
@@ -160,6 +162,7 @@ export class MultiArchImagePipelineStack extends Stack {
           },
           pre_build: {
             commands: [
+              'export DOCKER_CLI_EXPERIMENTAL=enabled',
               `aws ecr get-login-password --region ${this.region} | docker login --username AWS --password-stdin ${this.account}.dkr.ecr.${this.region}.amazonaws.com`,
               'version="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-8)"',
               `manifesturi="${this.account}.dkr.ecr.${this.region}.amazonaws.com/${repository.repositoryName}:$version"`,
@@ -170,6 +173,8 @@ export class MultiArchImagePipelineStack extends Stack {
           build: {
             commands: [
               'cd src/MultiArchApp/',
+              `docker pull "$x86imageuri"`,
+              `docker pull "$arm64imageuri"`,
               `docker manifest create "$manifesturi" "$x86imageuri" "$arm64imageuri"`,
               `docker manifest push $manifesturi`
             ]
