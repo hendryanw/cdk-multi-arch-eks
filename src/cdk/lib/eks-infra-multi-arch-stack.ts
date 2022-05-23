@@ -36,19 +36,21 @@ export class EksInfraMultiArchStack extends Stack {
     });
     cluster.awsAuth.addUserMapping(cliUser, { groups: [ 'system:masters' ] });
 
-    const x86OnDemandNodeGroup = cluster.addNodegroupCapacity('x86-ondemand-node-group', {
-      nodegroupName: 'x86-ondemand-node-group',
-      instanceTypes: [new ec2.InstanceType('t3.medium')],
+    const x86SpotMediumNodeGroup = cluster.addNodegroupCapacity('x86-spot-medium-node-group', {
+      nodegroupName: 'x86-spot-medium-node-group',
+      instanceTypes: [new ec2.InstanceType('t3.medium'), new ec2.InstanceType('t2.medium'), new ec2.InstanceType('t3a.medium')],
+      capacityType: eks.CapacityType.SPOT,
       minSize: 1,
       desiredSize: 1,
       maxSize: 5,
       diskSize: 50
     });
-    x86OnDemandNodeGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+    x86SpotMediumNodeGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
 
-    const armOnDemandNodeGroup = cluster.addNodegroupCapacity('arm-ondemand-node-group', {
-      nodegroupName: 'arm-ondemand-node-group',
+    const armSpotMediumNodeGroup = cluster.addNodegroupCapacity('arm-spot-medium-node-group', {
+      nodegroupName: 'arm-spot-medium-node-group',
       instanceTypes: [new ec2.InstanceType('t4g.medium')],
+      capacityType: eks.CapacityType.SPOT,
       minSize: 1,
       desiredSize: 1,
       maxSize: 5,
@@ -61,7 +63,7 @@ export class EksInfraMultiArchStack extends Stack {
         }
       ]
     });
-    armOnDemandNodeGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
+    armSpotMediumNodeGroup.role.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'));
 
     new CfnOutput(this, 'EKS-CLUSTER-NAME', {
       value: cluster.clusterName

@@ -21,7 +21,7 @@ spec:
         app: multi-arch-app
     spec:
       containers:
-      - image: 545983628851.dkr.ecr.ap-southeast-1.amazonaws.com/test-multi-arch-app:v0.2
+      - image: 545983628851.dkr.ecr.ap-southeast-1.amazonaws.com/multi-arch-app:a6facf94
         imagePullPolicy: Always
         name: multi-arch-app
         ports:
